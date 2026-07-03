@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <title>YUVI CODEX - Ultra Hosting Panel</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --primary: #00ffff;
+            --accent: #00ffff;
+            --box-bg: rgba(22, 27, 34, 0.7);
+            --text-glow: rgba(0, 255, 204, 0.4);
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-color);
+            color: #e6edf3;
+            font-family: var(--font-body);
+            min-height: 100vh;
+            padding-bottom: 120px;
+            overflow-x: hidden;
+        }
+
+        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        /* --- কালার কন্ট্রোল প্যানেল স্টাইল --- */
+        .menu-toggle {
+            position: fixed; top: 70px; right: 15px; width: 45px; height: 45px;
+            background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; color: #00ffff;
+            font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); transition: 0.4s ease;
+        }
+        .cyber-panel {
+            position: fixed; top: 125px; right: -300px; width: 260px;
+            background: rgba(10, 15, 20, 0.95); padding: 25px; border-radius: 20px;
+            backdrop-filter: blur(20px); border: 1px solid rgba(0, 255, 255, 0.2);
+            z-index: 999; transition: 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .cyber-panel.active { right: 15px; }
+        .color-dots-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+        .color-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: 0.3s; }
+        .color-dot.active { border-color: #fff; box-shadow: 0 0 15px currentColor; transform: scale(1.1); }
+        .setting-label { font-size: 10px; color: #00ffff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #00ffff; }
+
+        .user-bar { 
+            background: rgba(0, 0, 0, 0.8); padding: 10px 15px; display: flex; 
+            justify-content: space-between; align-items: center; backdrop-filter: blur(15px); 
+            position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .container { width: 94%; max-width: 600px; margin: 0 auto; position: relative; z-index: 1; }
+        .upload-card { background: var(--box-bg); padding: 25px; border-radius: 20px; border: 2px dashed rgba(0, 255, 255, 0.3); backdrop-filter: blur(12px); margin-bottom: 20px; transition: 0.3s; }
+        
+        #file-details {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 12px;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .upload-btn { background: var(--accent); color: #000; font-weight: 800; font-family: var(--font-head); border:none; border-radius:10px; padding: 14px; width: 100%; margin-top: 15px; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 15px var(--text-glow); }
+        
+        .box { background: var(--box-bg); padding: 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; }
+        .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; font-family: var(--font-head); display: inline-block; text-transform: uppercase; }
+        .status-running { background: rgba(0, 255, 65, 0.15); color: #00ff41; border: 1px solid #00ff41; }
+        .status-offline { background: rgba(255, 71, 87, 0.15); color: #ff4757; border: 1px solid #ff4757; }
+        .runtime-container { margin: 10px 0 15px 0; padding: 10px; background: rgba(0, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(0, 255, 255, 0.1); display: flex; align-items: center; justify-content: space-between; }
+        .runtime-clock { font-family: var(--font-head); font-size: 12px; color: var(--accent); text-shadow: 0 0 5px var(--accent); }
+        
+        /* --- বাটন গ্রিড আপডেট --- */
+        .button-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .btn-m { padding: 12px; border-radius: 10px; text-decoration: none; text-align: center; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 5px; border: none; font-family: var(--font-body); cursor: pointer; }
+        .run { background: #00d2ff; color: #000; }
+        .stop { background: #ff4757; color: #fff; }
+        .restart { background: #f39c12; color: #000; }
+        .delete { background: #30363d; color: #ff4d4d; border: 1px solid #ff4d4d; }
+        .download { background: rgba(0, 255, 255, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+        .edit { background: #58a6ff; color: #000; } /* এডিট বাটন কালার */
+
+        pre { background: #0d1117; color: #00ff41; padding: 12px; height: 130px; overflow-y: auto; border-radius: 12px; border: 1px solid #30363d; font-size: 11px; margin-top: 15px; }
+        
+        /* --- ফাইল ম্যানেজার এবং এডিটর স্টাইল --- */
+        #fmModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; padding:10px; box-sizing: border-box; }
+        .fm-container { background: #161b22; height: 100%; border-radius: 15px; display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--accent); }
+        #fileList { flex: 1; overflow-y: auto; background: #000; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #222; }
+        #editor { flex: 2; border-radius: 8px; font-size: 14px; }
+        .file-item { padding: 10px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .save-btn { background: #238636; color: white; padding: 10px; border-radius: 8px; border: none; margin-top: 10px; font-weight: bold; cursor: pointer; }
+
+        .branding { text-align: center; padding: 20px 0; }
+        .jubayer-text { font-size: 1.6rem; font-weight: 900; font-family: var(--font-head); letter-spacing: 6px; background: linear-gradient(to bottom, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .social-bar { background: transparent; padding: 15px; position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 25px; border: none; z-index: 1001; }
+        .social-icon { color: white; font-size: 26px; transition: 0.3s; text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+    </style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<div class="menu-toggle" onclick="toggleMenu()">
+    <i class="fa-solid fa-sliders" id="menuIcon"></i>
+</div>
+
+<div class="cyber-panel" id="sidePanel">
+    <div style="color: #fff; font-size: 12px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; letter-spacing: 2px;">GHOST CONFIG</div>
+    <div>
+        <span class="setting-label"><i class="fa-solid fa-palette"></i> Select System Hue</span>
+        <div class="color-dots-container">
+            <div class="color-dot active" style="background: #00ffff; color: #00ffff;" onclick="changeHue('#00ffff', this)"></div>
+            <div class="color-dot" style="background: #ff004c; color: #ff004c;" onclick="changeHue('#ff004c', this)"></div>
+            <div class="color-dot" style="background: #00ff00; color: #00ff00;" onclick="changeHue('#00ff00', this)"></div>
+            <div class="color-dot" style="background: #ff00ff; color: #ff00ff;" onclick="changeHue('#ff00ff', this)"></div>
+            <div class="color-dot" style="background: #ffff00; color: #ffff00;" onclick="changeHue('#ffff00', this)"></div>
+            <div class="color-dot" style="background: #ff8c00; color: #ff8c00;" onclick="changeHue('#ff8c00', this)"></div>
+            <div class="color-dot" style="background: #1e90ff; color: #1e90ff;" onclick="changeHue('#1e90ff', this)"></div>
+            <div class="color-dot" style="background: #ffffff; color: #ffffff;" onclick="changeHue('#ffffff', this)"></div>
+            <div class="color-dot" style="background: #a020f0; color: #a020f0;" onclick="changeHue('#a020f0', this)"></div>
+            <div class="color-dot" style="background: #00ffcc; color: #00ffcc;" onclick="changeHue('#00ffcc', this)"></div>
+        </div>
+    </div>
+    <div>
+        <span class="setting-label"><i class="fa-solid fa-expand"></i> Node Size</span>
+        <input type="range" id="pSize" min="10" max="80" value="38" oninput="updateSize(this.value)">
+    </div>
+    <div>
+        <span class="setting-label"><i class="fa-solid fa-gauge-high"></i> Velocity</span>
+        <input type="range" id="pSpeed" min="1" max="15" value="4" oninput="updateSpeed(this.value)">
+    </div>
+</div>
+
+<div class="user-bar">
+    <div style="font-family: var(--font-head); color: var(--accent); font-size: 13px;">Y U V I C O D E X</div>
+    <a href="/logout" style="color:#ff4d4d; font-size:18px;"><i class="fa-solid fa-power-off"></i></a>
+</div>
+
+<div class="container">
+    <div class="upload-card">
+        <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data">
+            <input type="file" name="file" id="fileInput" accept=".zip" required style="display:none;">
+            <label for="fileInput" style="cursor:pointer; display:block; text-align: center;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 40px; color: var(--accent);"></i>
+                <div style="margin-top:10px; font-weight: 600; letter-spacing: 1px;">UPLOAD ZIP PROJECT</div>
+            </label>
+            
+            <div id="file-details">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-file-code" style="color: var(--accent); font-size: 20px;"></i>
+                    <div style="overflow: hidden;">
+                        <div id="file-name" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file selected</div>
+                        <div id="file-size" style="font-size: 11px; color: #8b949e;">0 KB</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="upload-btn">DEPLOY SERVER</button>
+        </form>
+    </div>
+
+    {% for app in apps %}
+    <div class="box">
+        <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom:15px; font-family: var(--font-head);">
+            <span style="color: var(--accent);">{{ app.name }}</span>
+            <span id="status-{{ app.name }}" class="status-badge {% if app.running %}status-running{% else %}status-offline{% endif %}">
+                ● {% if app.running %}RUNNING{% else %}OFFLINE{% endif %}
+            </span>
+        </div>
+        <div class="runtime-container">
+            <span style="font-size: 11px; color: #8b949e;">UPTIME:</span>
+            <span class="runtime-clock" id="timer-{{ app.name }}">00d 00h 00m 00s</span>
+        </div>
+        <div class="button-grid">
+            <a href="/run/{{ app.name }}" class="btn-m run"><i class="fa-solid fa-play"></i> START</a>
+            <a href="/stop/{{ app.name }}" class="btn-m stop"><i class="fa-solid fa-stop"></i> STOP</a>
+            <button onclick="openFM('{{ app.name }}')" class="btn-m edit"><i class="fa-solid fa-code"></i> EDIT CODE</button>
+            <a href="/restart/{{ app.name }}" class="btn-m restart"><i class="fa-solid fa-rotate"></i> RESTART</a>
+            <a href="/download/{{ app.name }}" class="btn-m download"><i class="fa-solid fa-download"></i> DOWNLOAD ZIP</a>
+            <button onclick="confirmDelete('{{ app.name }}', '/delete/{{ app.name }}')" class="btn-m delete"><i class="fa-solid fa-trash"></i> DELETE</button>
+        </div>
+        <pre id="log-{{ app.name }}">Logs will appear here...</pre>
+    </div>
+    {% endfor %}
+
+    <div class="branding">
+        <h1 class="jubayer-text">Y U V I C O D E X</h1>
+        <p style="font-size: 11px; color: #8b949e; letter-spacing: 3px;">LOVE YOU ALL. SUPPOT KARO</p>
+    </div>
+</div>
+
+<div id="fmModal">
+    <div class="fm-container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 id="fmTitle" style="margin:0; color:var(--accent); font-family:var(--font-head); font-size:14px;">EDIT PROJECT</h4>
+            <button onclick="closeFM()" style="background:#ff4d4d; border:none; color:white; padding:5px 12px; border-radius:5px; cursor:pointer;">CLOSE</button>
+        </div>
+        <div id="fileList">Loading files...</div>
+        <div id="editor"></div>
+        <button id="saveBtn" class="save-btn" style="display:none;" onclick="saveFile()">SAVE CHANGES</button>
+    </div>
+</div>
+
+<div class="social-bar">
+    <a href="Tg - https://t.me/lambhaicodex" target="_blank" class="social-icon"><i class="fa-brands fa-telegram"></i></a>
+    <a href="Yt - https://www.youtube.com/@LamBhaiHK123" target="_blank" class="social-icon"><i class="fa-brands fa-youtube"></i></a>
+    <a href="https://instagram.com/jubayer550022" target="_blank" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
+    <a href="https://tiktok.com/@9x_jubayer_" target="_blank" class="social-icon"><i class="fa-brands fa-tiktok"></i></a>
+</div>
+
+<script language="javascript">
+document.write(unescape('%3Cscript%20src%3D%22https%3A%2F%2Fpl28664877.effectivegatecpm.com%2F9b%2F09%2F14%2F9b0914dde54e0f75462c782bc760cb71.js%22%3E%3C%2Fscript%3E'));
+</script>
+<script language="javascript">
+document.write(unescape('%3Cscript%20src%3D%22https%3A%2F%2Fpl28664877.effectivegatecpm.com%2F9b%2F09%2F14%2F9b0914dde54e0f75462c782bc760cb71.js%22%3E%3C%2Fscript%3E'));
+</script>
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+<script>
+
+    let startTimes = {}; 
+    let pConfig = { color: "#00ffff", size: 38, speed: 4 };
+
+    // কোড এডিটর সেটআপ
+    let editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    let activeProj = "";
+    let activeFile = "";
+
+    function openFM(name) {
+        activeProj = name;
+        document.getElementById('fmTitle').innerText = "FILES: " + name;
+        document.getElementById('fmModal').style.display = 'block';
+        refreshFiles();
+    }
+
+    function closeFM() { document.getElementById('fmModal').style.display = 'none'; }
+
+    function refreshFiles() {
+        fetch('/list_files/' + activeProj).then(res => res.json()).then(data => {
+            let html = "";
+            data.files.forEach(f => {
+                html += `<div class="file-item">
+                            <span onclick="loadFile('${f}')" style="cursor:pointer; color:var(--accent); font-size:13px;">📄 ${f}</span>
+                            <i class="fa-solid fa-trash-can" onclick="deleteFile('${f}')" style="color:#ff4d4d; cursor:pointer;"></i>
+                         </div>`;
+            });
+            document.getElementById('fileList').innerHTML = html || "Empty Project";
+        });
+    }
+
+    function loadFile(f) {
+        activeFile = f;
+        fetch('/read_file', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({project: activeProj, filename: f})
+        }).then(res => res.json()).then(data => {
+            editor.setValue(data.content, -1);
+            document.getElementById('saveBtn').style.display = 'block';
+            if(f.endsWith('.js')) editor.session.setMode("ace/mode/javascript");
+            else if(f.endsWith('.py')) editor.session.setMode("ace/mode/python");
+            else editor.session.setMode("ace/mode/text");
+        });
+    }
+
+    function saveFile() {
+        fetch('/save_file', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({project: activeProj, filename: activeFile, content: editor.getValue()})
+        }).then(res => res.json()).then(() => {
+            Swal.fire({ icon: 'success', title: 'Saved!', background: '#0a0a0a', color: '#fff', timer: 1000, showConfirmButton: false });
+        });
+    }
+
+    function deleteFile(f) {
+        Swal.fire({ title: 'মুছে ফেলবেন?', text: `${f} স্থায়ীভাবে ডিলিট হবে!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff4d4d', background: '#0a0a0a', color: '#fff' })
+        .then(res => {
+            if(res.isConfirmed) {
+                fetch('/delete_file', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({project: activeProj, filename: f})
+                }).then(() => refreshFiles());
+            }
+        });
+    }
+
+    // ফাইল সিলেক্ট ইভেন্ট লিসেনার
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const detailBox = document.getElementById('file-details');
+        if (file) {
+            document.getElementById('file-name').innerText = file.name;
+            let size = file.size / 1024;
+            document.getElementById('file-size').innerText = size > 1024 ? (size / 1024).toFixed(2) + " MB" : size.toFixed(2) + " KB";
+            detailBox.style.display = 'block';
+        } else {
+            detailBox.style.display = 'none';
+        }
+    });
+
+    function loadParticles() {
+        particlesJS('particles-js', {
+            "particles": {
+                "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": pConfig.color },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.8 },
+                "size": { "value": pConfig.size, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": pConfig.color, "opacity": 0.3, "width": 2 },
+                "move": { "enable": true, "speed": pConfig.speed, "out_mode": "out" }
+            },
+            "interactivity": { "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" } } },
+            "retina_detect": true
+        });
+        document.documentElement.style.setProperty('--accent', pConfig.color);
+    }
+
+    function toggleMenu() {
+        const panel = document.getElementById('sidePanel');
+        panel.classList.toggle('active');
+        document.getElementById('menuIcon').className = panel.classList.contains('active') ? "fa-solid fa-xmark" : "fa-solid fa-sliders";
+    }
+
+    function changeHue(newColor, element) {
+        pConfig.color = newColor;
+        document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+        element.classList.add('active');
+        loadParticles();
+    }
+
+    function updateSize(val) { pConfig.size = parseInt(val); loadParticles(); }
+    function updateSpeed(val) { pConfig.speed = parseInt(val); loadParticles(); }
+
+    function updateSystem() {
+        {% for app in apps %}
+            fetch('/get_log/{{ app.name }}').then(res => res.json()).then(data => {
+                const badge = document.getElementById('status-{{ app.name }}');
+                const logBox = document.getElementById('log-{{ app.name }}');
+                if (data.log) logBox.innerText = data.log;
+                if (data.status === "RUNNING") {
+                    badge.innerText = "● RUNNING";
+                    badge.className = "status-badge status-running";
+                    if (data.start_time > 0) startTimes['{{ app.name }}'] = data.start_time;
+                } else {
+                    badge.innerText = "● OFFLINE";
+                    badge.className = "status-badge status-offline";
+                    delete startTimes['{{ app.name }}'];
+                }
+            });
+        {% endfor %}
+    }
+
+    function runTimers() {
+        Object.keys(startTimes).forEach(name => {
+            const diff = Date.now() - startTimes[name];
+            if (diff > 0) {
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                document.getElementById(`timer-${name}`).innerText = `${String(d).padStart(2,'0')}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+            }
+        });
+    }
+
+    setInterval(updateSystem, 3000);
+    setInterval(runTimers, 1000);
+    loadParticles();
+
+    function confirmDelete(name, url) {
+        Swal.fire({ title: 'মুছে ফেলবেন?', text: `${name} মুছে ফেলা হবে!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff4d4d', background: '#0a0a0a', color: '#fff' })
+        .then(res => { if(res.isConfirmed) window.location.href = url; });
+    }
+</script>
+</body>
+</html>
