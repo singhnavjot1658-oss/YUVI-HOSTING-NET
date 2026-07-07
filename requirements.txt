@@ -1,9 +1,0 @@
-Flask
-Werkzeug
-gunicorn
-psycopg2-binary
-SQLAlchemy
-requests
-python-dotenv
-bcrypt
-faker
